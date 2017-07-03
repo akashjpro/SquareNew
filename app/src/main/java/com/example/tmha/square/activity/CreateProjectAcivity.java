@@ -62,12 +62,14 @@ import java.util.Locale;
 
 
 public class CreateProjectAcivity extends AppCompatActivity
-        implements SeekBar.OnSeekBarChangeListener{
+        implements SeekBar.OnSeekBarChangeListener,
+                   View.OnClickListener{
 
     private TextView mTxtProgress;
     private EditText mEdtNameProject, mEdtContent, mEdtLocation;
     private EditText mEdtStartTime, mEdtEndTime, mEdtAddress;
     private ImageView mImgProject, mImgSave, mImgCancel;
+    private ImageView mImgStartTime, mImgEndTime;
     private Button mBtnSelectFile, mBtnCapture, mBtnGetLocation;
     private final int REQUEST_CODE_FOLDER = 111;
     private final int REQUEST_CODE_CAPTURE = 112;
@@ -104,184 +106,17 @@ public class CreateProjectAcivity extends AppCompatActivity
 
         mSeekBarProgress.setOnSeekBarChangeListener(this);
 
-        mBtnSelectFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (Build.VERSION.SDK_INT >= 23) {
-                    // Here, thisActivity is the current activity
-                    if (ContextCompat.checkSelfPermission(CreateProjectAcivity.this,
-                            android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                            != PackageManager.PERMISSION_GRANTED) {
+        mBtnSelectFile.setOnClickListener(this);
+        mBtnCapture.setOnClickListener(this);
 
-                        // Should we show an explanation?
-                        if (ActivityCompat.shouldShowRequestPermissionRationale(CreateProjectAcivity.this,
-                                android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+        mImgSave.setOnClickListener(this);
+        mImgCancel.setOnClickListener(this);
+        mImgStartTime.setOnClickListener(this);
+        mImgEndTime.setOnClickListener(this);
 
-                            // Show an expanation to the user *asynchronously* -- don't block
-                            // this thread waiting for the user's response! After the user
-                            // sees the explanation, try again to request the permission.
+        mEdtStartTime.setOnClickListener(this);
+        mEdtEndTime.setOnClickListener(this);
 
-                        } else {
-
-                            // No explanation needed, we can request the permission.
-
-                            ActivityCompat.requestPermissions(CreateProjectAcivity.this,
-                                    new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
-                                    PERMISSIONS_REQUEST_READ_EXTERNAL);
-
-                            // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-                            // app-defined int constant. The callback method gets the
-                            // result of the request.
-                        }
-                    } else {
-                        ActivityCompat.requestPermissions(CreateProjectAcivity.this,
-                                new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
-                                PERMISSIONS_REQUEST_READ_EXTERNAL);
-                    }
-                } else {
-
-                    Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                    photoPickerIntent.setType("image/*");
-                    startActivityForResult(photoPickerIntent, REQUEST_CODE_FOLDER);
-                }
-
-//                Intent intent = new Intent(Intent.ACTION_PICK,
-//                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//                intent.setType("image/*");
-//                startActivityForResult(intent, REQUEST_CODE_FOLDER);
-            }
-        });
-
-
-
-        mBtnCapture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent cameraIntent
-                        = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-                    // Create the File where the photo should go
-                    File photoFile = null;
-                    try {
-                        photoFile = createImageFile();
-                    } catch (IOException ex) {
-                        // Error occurred while creating the File
-                        Log.i(TAG, "IOException");
-                    }
-                    // Continue only if the File was successfully created
-                    if (photoFile != null) {
-                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                                Uri.fromFile(photoFile));
-                        startActivityForResult(cameraIntent,
-                                REQUEST_CODE_CAPTURE);
-                    }
-                }
-            }
-        });
-
-        mImgSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                //get name project
-                String name = mEdtNameProject.getText().toString().trim();
-                //check name
-                if (TextUtils.isEmpty(name)){
-                    Toast.makeText(CreateProjectAcivity.this,
-                            " Tên dự án không được để trống!!!"
-                            , Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                //get content project
-                String content = mEdtContent.getText().toString().trim();
-                //check content
-                if (TextUtils.isEmpty(name)){
-                    Toast.makeText(CreateProjectAcivity.this,
-                            " Nội dung dự án không được để trống!!!"
-                            , Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                String address = mEdtAddress.getText().toString().trim();
-                if(TextUtils.isEmpty(address)){
-                    Toast.makeText(CreateProjectAcivity.this,
-                            "Xin vui long nhap dia chi",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                //check image
-                if(mCurrentPhotoPath == null){
-                    Toast.makeText(CreateProjectAcivity.this,
-                            "Please, select picture",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                String createBy = "User";
-                String timeCreate = TimeUtils.getCurrentTime();
-                String startTime = mEdtStartTime.getText().toString().trim();
-                String endTime   = mEdtEndTime.getText().toString().trim();
-                String location  = mEdtLocation.getText().toString().trim();
-                int progess = mProgress;
-                Project project = new Project(mId, name, mCurrentPhotoPath,
-                        progess, startTime, endTime, content,
-                        address, location, createBy, timeCreate );
-                //insert or update project
-                insertUpdateReport(project);
-
-
-
-            }
-        });
-
-        mEdtStartTime.addTextChangedListener(textWatcher);
-        mEdtEndTime.addTextChangedListener(textWatcher);
-
-
-
-        mEdtStartTime.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                final DatePickerFragment pickerFragment
-                        = new DatePickerFragment();
-                DatePickerFragment fragment
-                        = (DatePickerFragment) getFragmentManager()
-                        .findFragmentByTag("datePicker");
-                if(fragment != null) {
-                    return;
-                }else {
-                    pickerFragment.setListenerDatePicker(new ListenerDatePicker() {
-                        @Override
-                        public void onChangeTime(String date) {
-                            mEdtStartTime.setText(date);
-                        }
-                    });
-                    pickerFragment.show(getFragmentManager(), "datePicker");
-                }
-            }
-        });
-
-        mEdtEndTime.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                final DatePickerFragment pickerFragment = new DatePickerFragment();
-                DatePickerFragment fragment
-                        = (DatePickerFragment) getFragmentManager()
-                        .findFragmentByTag("datePicker");
-                if(fragment != null) {
-                    return;
-                }else {
-                    pickerFragment.setListenerDatePicker(new ListenerDatePicker() {
-                        @Override
-                        public void onChangeTime(String date) {
-                            mEdtEndTime.setText(date);
-                        }
-                    });
-                    pickerFragment.show(getFragmentManager(), "datePicker");
-                }
-            }
-        });
 
         mBtnGetLocation.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -289,6 +124,8 @@ public class CreateProjectAcivity extends AppCompatActivity
                 getLocation();
             }
         });
+
+        mImgCancel.setOnClickListener(this);
 
     }
 
@@ -423,6 +260,9 @@ public class CreateProjectAcivity extends AppCompatActivity
     private void addControls() {
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         mGeocoder = new Geocoder(this, Locale.getDefault());
+
+        mImgStartTime   = (ImageView) findViewById(R.id.img_start_time);
+        mImgEndTime     = (ImageView) findViewById(R.id.img_end_time);
 
         mEdtNameProject = (EditText) findViewById(R.id.edtNameProject);
         mEdtContent     = (EditText) findViewById(R.id.edtContentProject);
@@ -655,4 +495,183 @@ public class CreateProjectAcivity extends AppCompatActivity
         dialog.show();
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btnSelectPhoto:
+                    selectFile();
+                break;
+            case R.id.btnCapture:
+                    captureImage();
+                break;
+            case R.id.imgCancel:
+                    onBackPressed();
+                break;
+            case R.id.imgSave:
+                    saveProject();
+                break;
+            case R.id.img_start_time:
+                selectStartTime();
+                break;
+            case R.id.img_end_time:
+                selectEndTime();
+                break;
+            case R.id.edtStartTime:
+                selectStartTime();
+                break;
+            case R.id.edtEndTime:
+                selectEndTime();
+                break;
+        }
+    }
+
+    private void selectFile(){
+        if (Build.VERSION.SDK_INT >= 23) {
+            // Here, thisActivity is the current activity
+            if (ContextCompat.checkSelfPermission(CreateProjectAcivity.this,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(CreateProjectAcivity.this,
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+
+                    // Show an expanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+
+                } else {
+
+                    // No explanation needed, we can request the permission.
+
+                    ActivityCompat.requestPermissions(CreateProjectAcivity.this,
+                            new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                            PERMISSIONS_REQUEST_READ_EXTERNAL);
+
+                    // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                }
+            } else {
+                ActivityCompat.requestPermissions(CreateProjectAcivity.this,
+                        new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                        PERMISSIONS_REQUEST_READ_EXTERNAL);
+            }
+        } else {
+
+            Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+            photoPickerIntent.setType("image/*");
+            startActivityForResult(photoPickerIntent, REQUEST_CODE_FOLDER);
+        }
+    }
+
+    private void captureImage(){
+        Intent cameraIntent
+                = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                Log.i(TAG, "IOException");
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(photoFile));
+                startActivityForResult(cameraIntent,
+                        REQUEST_CODE_CAPTURE);
+            }
+        }
+    }
+
+    private void saveProject(){
+
+        //get name project
+        String name = mEdtNameProject.getText().toString().trim();
+        //check name
+        if (TextUtils.isEmpty(name)){
+            Toast.makeText(CreateProjectAcivity.this,
+                    " Tên dự án không được để trống!!!"
+                    , Toast.LENGTH_SHORT).show();
+            return;
+        }
+        //get content project
+        String content = mEdtContent.getText().toString().trim();
+        //check content
+        if (TextUtils.isEmpty(name)){
+            Toast.makeText(CreateProjectAcivity.this,
+                    " Nội dung dự án không được để trống!!!"
+                    , Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String address = mEdtAddress.getText().toString().trim();
+        if(TextUtils.isEmpty(address)){
+            Toast.makeText(CreateProjectAcivity.this,
+                    "Xin vui long nhap dia chi",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        //check image
+        if(mCurrentPhotoPath == null){
+            Toast.makeText(CreateProjectAcivity.this,
+                    "Please, select picture",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String createBy = "User";
+        String timeCreate = TimeUtils.getCurrentTime();
+        String startTime = mEdtStartTime.getText().toString().trim();
+        String endTime   = mEdtEndTime.getText().toString().trim();
+        String location  = mEdtLocation.getText().toString().trim();
+        int progess = mProgress;
+        Project project = new Project(mId, name, mCurrentPhotoPath,
+                progess, startTime, endTime, content,
+                address, location, createBy, timeCreate );
+        //insert or update project
+        insertUpdateReport(project);
+
+    }
+
+    private void selectStartTime(){
+        final DatePickerFragment pickerFragment
+                = new DatePickerFragment();
+        DatePickerFragment fragment
+                = (DatePickerFragment) getFragmentManager()
+                .findFragmentByTag("datePicker");
+        if(fragment != null) {
+            return;
+        }else {
+            pickerFragment.setListenerDatePicker(new ListenerDatePicker() {
+                @Override
+                public void onChangeTime(String date) {
+                    mEdtStartTime.setText(date);
+                }
+            });
+            pickerFragment.show(getFragmentManager(), "datePicker");
+        }
+    }
+
+    private void selectEndTime(){
+        final DatePickerFragment pickerFragment = new DatePickerFragment();
+        DatePickerFragment fragment
+                = (DatePickerFragment) getFragmentManager()
+                .findFragmentByTag("datePicker");
+        if(fragment != null) {
+            return;
+        }else {
+            pickerFragment.setListenerDatePicker(new ListenerDatePicker() {
+                @Override
+                public void onChangeTime(String date) {
+                    mEdtEndTime.setText(date);
+                }
+            });
+            pickerFragment.show(getFragmentManager(), "datePicker");
+        }
+    }
 }

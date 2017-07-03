@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.example.tmha.square.R;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 
 /*
@@ -27,7 +28,7 @@ import com.google.firebase.database.DatabaseReference;
  * Created by tmha on 06/7/2017
  */
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button btnLogin, btnGoogle, btnFacebook;
     private ImageView mImgIcon;
@@ -73,34 +74,33 @@ public class LoginActivity extends AppCompatActivity {
             }
         }, 4000);
 
-//        mDatabase = FirebaseDatabase.getInstance().getReference();
-//        mDatabase.child("Hello").setValue("No OK ");
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mDatabase.child("Hello").setValue("KKKKKKKKKKKKKKKK");
     }
 
     private void addEvents() {
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.left_in, R.anim.right_out);
-            }
-        });
-
-        btnGoogle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
-        btnFacebook.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
+        btnLogin.setOnClickListener(this);
+        btnGoogle.setOnClickListener(this);
+        btnFacebook.setOnClickListener(this);
     }
 
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.buttonLogin:
+                    login();
+                break;
+            case R.id.buttonGoogle:
+                break;
+            case R.id.buttonFacebook:
+                break;
+        }
+    }
+
+    private void login(){
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.left_in, R.anim.right_out);
+    }
 }
