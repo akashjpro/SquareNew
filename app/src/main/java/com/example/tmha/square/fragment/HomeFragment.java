@@ -41,6 +41,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback{
         mView = inflater.inflate(R.layout.fragment_home, container, false);
         addControls();
         return mView;
+
+
+
+
+        
     }
 
     /**
